@@ -10,3 +10,5 @@
 > 查看数据更新
 1. ./easyClawler
 
+> dir 历史数据目录
+> newData.csv 更新数据文件
