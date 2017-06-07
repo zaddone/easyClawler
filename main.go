@@ -4,6 +4,7 @@ import (
 	"io/ioutil"
 	"net/http"
 	"github.com/opesun/goquery"
+	"github.com/axgle/mahonia"
 //	"net"
 	"time"
 	"net/url"
@@ -21,6 +22,7 @@ var (
 	NewFile = flag.String("n","newData.csv","dir2")
 	Day = flag.Int("p",30,"data count")
 	Init = flag.Bool("init",false,"init")
+	GBK = flag.Bool("gbk",false,"gbk")
 )
 type InfoData struct {
 	name string
@@ -29,9 +31,9 @@ type InfoData struct {
 }
 
 func (self *InfoData) IsSame(d *InfoData) bool {
-	if self.name != d.name {
-		return false
-	}
+//	if self.name != d.name {
+//		return false
+//	}
 	if self.url != d.url {
 		return false
 	}
@@ -59,7 +61,13 @@ func (self *InfoData) SaveData(dir string) {
 	}
 	defer f.Close()
 	w:=csv.NewWriter(f)
-	err = w.Write([]string{self.name,self.url})
+	if *GBK {
+	//	fmt.Println("gbk")
+		enc:=mahonia.NewEncoder("gbk")
+		err = w.Write([]string{enc.ConvertString(self.name),self.url})
+	}else{
+		err = w.Write([]string{self.name,self.url})
+	}
 	if err != nil {
 		panic(err)
 	}
@@ -105,20 +113,19 @@ func (self *SiteInfo) ReadOldData(dir string) error {
 		}
 		defer f.Close()
 		r := csv.NewReader(f)
-//		rd := bufio.NewReader(f)
-		//count :=0
 		for {
 			ls,err :=r.Read()
-		//	line,err := rd.ReadString('\n')
 			if err != nil {
 				if io.EOF == err {
 					break
 				}
 			}
-//			fmt.Println(line[:len(line)-1])
-		//	ls := strings.Split(line[:len(line)-1],"  ")
-//			self.OldData[us[len(us)-1]]= &InfoData{ls[0],ls[1],t}
-			self.OldData = append(self.OldData,&InfoData{ls[0],ls[1],t})
+			if *GBK{
+				dec := mahonia.NewDecoder("gbk")
+				self.OldData = append(self.OldData,&InfoData{dec.ConvertString(ls[0]),ls[1],t})
+			}else{
+				self.OldData = append(self.OldData,&InfoData{ls[0],ls[1],t})
+			}
 		//	count++
 			self.Count ++
 			if self.Count!=len(self.OldData){
@@ -195,7 +202,13 @@ func (self *SiteInfo) SaveNewData(NewFile string) error {
 	var data [][]string
 	for _,d := range self.NewData {
 		fmt.Println(d)
-		data = append(data,[]string{d.Time,d.name,d.url})
+		if *GBK {
+		//	fmt.Println("gbk")
+			enc := mahonia.NewEncoder("gbk")
+			data = append(data,[]string{d.Time,enc.ConvertString(d.name),d.url})
+		}else{
+			data = append(data,[]string{d.Time,d.name,d.url})
+		}
 //		_,err = f.WriteString(d.Time+"  "+d.name+"  "+d.url+"\n")
 //		if err != nil {
 //			return err
