@@ -11,9 +11,10 @@ import (
 	"io"
 	"os"
 	"path/filepath"
-	"bufio"
+//	"bufio"
 	"strings"
 	"flag"
+	"encoding/csv"
 )
 var (
 	Dir = flag.String("d","dir","dir1")
@@ -41,15 +42,28 @@ func (self *InfoData) IsSame(d *InfoData) bool {
 }
 func (self *InfoData) SaveData(dir string) {
 	os.MkdirAll(dir,0777)
-	f,err :=os.OpenFile(filepath.Join(dir,self.Time+".csv"),os.O_CREATE|os.O_APPEND|os.O_RDWR,0777)
+	filename:=filepath.Join(dir,self.Time+".csv")
+	_,err := os.Stat(filename)
+	var f *os.File
 	if err != nil {
-		panic(err)
+		f,err = os.Create(filename)
+		if err != nil {
+			panic(err)
+		}
+		f.WriteString("\xEF\xBB\xBF")
+	}else{
+		f,err =os.OpenFile(filepath.Join(dir,self.Time+".csv"),os.O_APPEND|os.O_RDWR,0777)
+		if err != nil {
+			panic(err)
+		}
 	}
 	defer f.Close()
-	_,err = f.WriteString(fmt.Sprintf("%s  %s\n",self.name,self.url))
+	w:=csv.NewWriter(f)
+	err = w.Write([]string{self.name,self.url})
 	if err != nil {
 		panic(err)
 	}
+	w.Flush()
 }
 type SiteInfo struct {
 
@@ -90,17 +104,19 @@ func (self *SiteInfo) ReadOldData(dir string) error {
 			panic(err)
 		}
 		defer f.Close()
-		rd := bufio.NewReader(f)
+		r := csv.NewReader(f)
+//		rd := bufio.NewReader(f)
 		//count :=0
 		for {
-			line,err := rd.ReadString('\n')
+			ls,err :=r.Read()
+		//	line,err := rd.ReadString('\n')
 			if err != nil {
 				if io.EOF == err {
 					break
 				}
 			}
 //			fmt.Println(line[:len(line)-1])
-			ls := strings.Split(line[:len(line)-1],"  ")
+		//	ls := strings.Split(line[:len(line)-1],"  ")
 //			self.OldData[us[len(us)-1]]= &InfoData{ls[0],ls[1],t}
 			self.OldData = append(self.OldData,&InfoData{ls[0],ls[1],t})
 		//	count++
@@ -174,13 +190,22 @@ func (self *SiteInfo) SaveNewData(NewFile string) error {
 		return err
 	}
 	defer f.Close()
+	f.WriteString("\xEF\xBB\xBF")
+	w:=csv.NewWriter(f)
+	var data [][]string
 	for _,d := range self.NewData {
 		fmt.Println(d)
-		_,err = f.WriteString(d.Time+"  "+d.name+"  "+d.url+"\n")
-		if err != nil {
-			return err
-		}
+		data = append(data,[]string{d.Time,d.name,d.url})
+//		_,err = f.WriteString(d.Time+"  "+d.name+"  "+d.url+"\n")
+//		if err != nil {
+//			return err
+//		}
 	}
+	err = w.WriteAll(data)
+	if err != nil {
+		panic(err)
+	}
+	w.Flush()
 	return nil
 
 }
