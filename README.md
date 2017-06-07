@@ -1,7 +1,8 @@
 # INSTALL
-> 安装golang 参见以下网站或者自己查找
+> 安装golang 和git 参见以下网站或者自己查找
 1. https://golang.org/dl/
-2. go get github.com/zaddone/easyClawler
+2. https://git-scm.com/download/
+3. go get github.com/zaddone/easyClawler
 
 # RUN
 > 查看指定时间内的数据 (p=30 30天内)
