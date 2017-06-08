@@ -22,7 +22,7 @@ var (
 	NewFile = flag.String("n","newData.csv","dir2")
 	Day = flag.Int("p",30,"data count")
 	Init = flag.Bool("init",false,"init")
-	GBK = flag.Bool("gbk",false,"gbk")
+	Mahonia = flag.String("m","","gbk")
 )
 type InfoData struct {
 	name string
@@ -61,9 +61,9 @@ func (self *InfoData) SaveData(dir string) {
 	}
 	defer f.Close()
 	w:=csv.NewWriter(f)
-	if *GBK {
+	if *Mahonia!="" {
 	//	fmt.Println("gbk")
-		enc:=mahonia.NewEncoder("gbk")
+		enc:=mahonia.NewEncoder(*Mahonia)
 		err = w.Write([]string{enc.ConvertString(self.name),self.url})
 	}else{
 		err = w.Write([]string{self.name,self.url})
@@ -120,8 +120,9 @@ func (self *SiteInfo) ReadOldData(dir string) error {
 					break
 				}
 			}
-			if *GBK{
-				dec := mahonia.NewDecoder("gbk")
+			
+			if *Mahonia!="" {
+				dec := mahonia.NewDecoder(*Mahonia)
 				self.OldData = append(self.OldData,&InfoData{dec.ConvertString(ls[0]),ls[1],t})
 			}else{
 				self.OldData = append(self.OldData,&InfoData{ls[0],ls[1],t})
@@ -202,9 +203,10 @@ func (self *SiteInfo) SaveNewData(NewFile string) error {
 	var data [][]string
 	for _,d := range self.NewData {
 		fmt.Println(d)
-		if *GBK {
+		if *Mahonia!="" {
 		//	fmt.Println("gbk")
-			enc := mahonia.NewEncoder("gbk")
+			enc:=mahonia.NewEncoder(*Mahonia)
+	//		enc := mahonia.NewEncoder("gbk")
 			data = append(data,[]string{d.Time,enc.ConvertString(d.name),d.url})
 		}else{
 			data = append(data,[]string{d.Time,d.name,d.url})
