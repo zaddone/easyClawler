@@ -23,6 +23,7 @@ var (
 	Day = flag.Int("p",30,"data count")
 	Init = flag.Bool("init",false,"init")
 	Mahonia = flag.String("m","","gbk")
+	ChannelCode = flag.String("c","sjcg1","ChannelCode")
 )
 type InfoData struct {
 	name string
@@ -321,7 +322,7 @@ func (self *SiteInfo)GetPage(page int,dir string,Day int) error {
 	uv.Add("rp","25")
 	uv.Add("page",fmt.Sprintf("%d",page))
 	uv.Add("moreType","provincebuyBulletinMore")
-	uv.Add("channelCode","sjcg1")
+	uv.Add("channelCode",*ChannelCode)
 	path += uv.Encode()
 	fmt.Println(path)
 	b,err:= self.ClientDO(path)
